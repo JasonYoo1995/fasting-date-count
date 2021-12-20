@@ -1,14 +1,54 @@
-# [차세대분산시스템] 텀프로젝트 1조
-
-## 주제
-쿠버네티스 기반의 단식 일자 카운트 서비스
-
-## 팀원
-- 202160372 구다희(@dadahee)
-- 201511275 유경원(@JasonYoo1995)
-
-## 소개
-끊고 싶은 음식을 등록하고, 일자별 리뷰를 남겨 단식 일자를 카운트하는 서비스
-
-## 내용
-https://tame-octagon-674.notion.site/01-e7e334eb9e924ef193710939a3767020
+- **사용 스택**
+    - 서버 : Amazon RDS(MariaDB), Spring Boot, Spring Security, OAuth2, Java, Gradle, JUnit, Swagger, Mustache
+    - 인프라 : Vagrant, Virtualbox, Kubernetes, Docker, Helm, Jenkins, Github, Prometheus, Grafana, Slack
+- **개발 기간** : 2021년 11월 8일 ~ 12월 18일
+- **시연 영상** : [https://youtu.be/x0DMDjAD9iM](https://youtu.be/x0DMDjAD9iM)
+- **프로젝트 내용 요약**
+    - 끊고 싶은 음식을 등록하여, 음식별 단식 일자를 카운트하고 일자별 리뷰를 남기는 서비스
+    - 쿠버네티스 기반의 인프라 구축으로 고가용성 보장 및 빌드/배포/모니터링/알림 자동화
+- **구현 내용**
+    - Spring 서버를 Docker Image로 빌드하고 Kubernetes 환경에 Deployment로 배포
+    - Local Registry를 통한 Image Pull
+    - Local Load Balancer를 통한 부하 분산
+    - Metric Server를 통한 메트릭 지표 수집
+    - HPA를 통한 자동 스케일링
+    - Github Webhook과 Jenkins, Kubernetes, Slack을 연동한 CI/CD 파이프라인 구축
+    - Prometheus와 Grafana를 통해 모니터링 시각화
+- **제작 문서**
+    
+    [쿠버네티스 기반의 단식 일자 카운트 서비스 문서](https://www.notion.so/afd5b68dfa304b86b6e564cdd22fb687)
+    
+- **어려웠던 점 / 해결 방법**
+    - Problem and Solution #1
+        - 문제
+            - 버전 호환성으로 인해 VirtualBox의 GUI가 정상적으로 동작하지 않음
+        - 해결
+            - 포트 포워딩, CPU/Memory 등의 자원 할당, VM 부팅 및 종료 수행 등의 동작을 GUI가 아닌 CLI를 통해 수행
+    - Problem and Solution #2
+        - 문제
+            - VirtualBox에서의 포트 포워딩이 정상적으로 이루어지지 않음
+        - 해결
+            - 포트 포워딩 시 Port만 선언하지 않고 IP를 함께 선언하여 해결
+    - Problem and Solution #3
+        - 문제
+            - Scale Out 후 요청이 중지되어도 Memory 할당량이 줄지 않는 문제
+        - 해결
+            - Research 결과, Memory 사용 후 즉시 반납하지 않았을 뿐, 자원이 고갈되는 현상은 아닌 것으로 판단 (문제 없음)
+    - Problem and Solution #4
+        - 문제
+            - HPA 세부 설정값 Setting 시 정상 배포되지 않는 현상
+        - 해결
+            - 오류나 에러 상태가 뜨지 않고 원인이나 로그도 표시되지 않아 디버깅에 어려움이 있었으나, yaml 파일에 문법적인 오류가 있을 때 이런 현상이 발생한다는 것을 발견
+            - 좀 더 세부적인 HPA 설정값을 사용하려면, HPA의 apiVersion을 좀 더 최신 버전(autoscaling/v2beta2)으로 선언해야, 해당 문법을 정상 지원
+    - Problem and Solution #5
+        - 문제
+            - 로드 밸런서가 계속 생성되지 않는데 오류 로그는 뜨지 않음
+        - 해결
+            - MetalLB의 Configuration에 선언된 로드 밸런서 할당 IP 범위 만큼만 할당되기 때문이었음
+- **보완해야 할 점**
+    - 보안상 민감한 설정값들이 들어 있는 설정 파일을 gitignore로 가리고, 젠킨스가 CI/CD를 위해 Git Clone하는 과정 중에 Jenkins Agent에 동적으로 설정 파일을 삽입할 수 있으면 더 좋을 것
+    - 스프링 서버(파드)가 새로 생성되어 초기화될 때 초기화를 위해 CPU/Memory 자원이 많이 들기 때문에 HPA가 불필요한 스케일링을 수행하게 되는데, 초기화 과정을 제외한 나머지에 대해서만 자원 모니터링을 할 수 있다면 더 좋을 것
+    - 젠킨스에서 빌드를 성공했을 경우에만 슬랙에 알림이 가는데, 빌드를 실패한 경우에도 실패 원인과 함께 알림이 간다면 더 좋을 것
+    - Ingress를 통해 특정 웹페이지를 접속하는 것은 되나, 그 상태에서 페이지를 이동할 때 URL Rewriting이 원하는대로 이루어지지 않는 문제
+    - 빌드 후 롤링 업데이트를 통한 무중단 배포 시 이미지를 교체하면, 새로운 파드가 생성되자마자 기존 파드가 종료되기 때문에, 새로운 파드에서 스프링 서버가 초기화되는 동안(약 3분) 서비스 중단 현상이 발생하는데, 만약 이때 파드를 스위칭하는 타이밍을 세부적으로 제어할 수 있다면 진정한 무중단 배포가 될 수 있을 것 같음
+    - 다음에 부하 테스트는 Apache JMeter 같은 솔루션들을 활용하면 좋을 듯
