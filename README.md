@@ -16,7 +16,7 @@
     - Prometheus와 Grafana를 통해 모니터링 시각화
 - **제작 문서**
     
-    [쿠버네티스 기반의 단식 일자 카운트 서비스 문서](https://www.notion.so/afd5b68dfa304b86b6e564cdd22fb687)
+    [쿠버네티스 기반의 단식 일자 카운트 서비스 문서](https://jasonyoo95.notion.site/afd5b68dfa304b86b6e564cdd22fb687)
     
 - **어려웠던 점 / 해결 방법**
     - Problem and Solution #1
